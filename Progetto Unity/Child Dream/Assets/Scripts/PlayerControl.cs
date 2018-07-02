@@ -4,12 +4,13 @@ using UnityEngine;
 
 public class PlayerControl : MonoBehaviour {
 
-    public LayerMask groundLayer;
-    public float speedMultiplier = 1f;
-    public float jumpPower = 1f;
-    public float fallMultiplier = 2.5f;
-    public float lowJumpMultiplier = 2f;
-    public float groundCheckRadius = 0.5f;
+    public LayerMask groundLayer;               // Layer che indica il terreno su cui deve camminare il personaggio
+    public float speedMultiplier = 1f;          // Massima velocità di camminata
+    public float jumpPower = 1f;                // Potenza del salto 
+    public float fallMultiplier = 2.5f;         // Maggiorazione di accelerazione durante la caduta
+    public float highJumpMultiplier = 2f;       // Potenziamento del salto quando si tiene premuto il tasto
+    public float groundCheckRadius = 0.5f;      // Distanza del raycast per controllare se si è a terra
+    public float jumpAttenuationValue = 0.1f;   // Attenuazione della velocità laterale mentre si è in volo
 
     Animator childAnimator;
     Rigidbody childBody;
@@ -17,13 +18,15 @@ public class PlayerControl : MonoBehaviour {
     float axisValue;
     float currentSpeed;
     
-
     bool facingRight = true;
+    public bool FacingRight { set { facingRight = value; } get { return facingRight; } }
+    bool controllable = true;
+    public bool Controllable { set { controllable = value; } }
+
     bool grounded = false;
     bool hasToJump = false;
 
     // DEBUG CANCELLARE
-    bool oldGrounded = false;
 
     private void Awake()
     {
@@ -38,20 +41,28 @@ public class PlayerControl : MonoBehaviour {
 
     private void Start()
     {
-        StartCoroutine("RaycastCoroutine", 0.25f);
+        StartCoroutine("RaycastCoroutine", 0.1f);
     }
 
     // Update is called once per frame
     private void Update()
     {
-        // Input management
-        if (Input.GetButtonDown("Jump") && grounded)
-            hasToJump = true;
+        if (controllable)
+        {
+            // Input management
+            if (Input.GetButtonDown("Jump") && grounded && childBody.velocity.y < 0.05f)
+                hasToJump = true;
 
-        axisValue = Input.GetAxis("Horizontal");
+            axisValue = Input.GetAxis("Horizontal");
 
-        if (Input.GetButton("Walk"))
-            axisValue *= 0.5f;
+            if (Input.GetButton("Walk"))
+                axisValue *= 0.5f;
+        }
+        else
+        {
+            hasToJump = false;
+            axisValue = 0f;
+        }
     }
 
 
@@ -60,14 +71,27 @@ public class PlayerControl : MonoBehaviour {
         if (childBody.velocity.y < 0)
             childBody.velocity += Vector3.up * Physics.gravity.y * fallMultiplier * Time.deltaTime;
         else if (childBody.velocity.y > 0 && Mathf.Abs(Input.GetAxis("Jump")) > 0.05)
-            childBody.velocity += Vector3.up * Physics.gravity.y * lowJumpMultiplier * Time.deltaTime;
+            childBody.velocity += Vector3.up * Physics.gravity.y * highJumpMultiplier * Time.deltaTime;
 
         // Jump
         if (grounded && hasToJump)
         {
             grounded = false;
+            
+            float newVelocity;
+            if (Mathf.Abs(axisValue) < 0.05f)
+                newVelocity = 0f;
+            else if (Mathf.Abs(axisValue) < 0.6f)
+                newVelocity = speedMultiplier / 2;
+            else
+                newVelocity = speedMultiplier;
+
+            Debug.Log("Velocity on y before is " + childBody.velocity.y);
+            Debug.Log("Velocity on x before is " + childBody.velocity.x);
             childBody.AddForce(new Vector3(0, jumpPower, 0), ForceMode.Impulse);
-            //childBody.velocity = new Vector3(childBody.velocity.y, jumpPower, 0);
+            childBody.velocity -=  Vector3.right * (childBody.velocity.x - Mathf.Sign(childBody.velocity.x) * newVelocity);
+            Debug.Log("new velocity is "+ newVelocity + " and x offset is" + (childBody.velocity.x - Mathf.Sign(childBody.velocity.x) * newVelocity));
+            StartCoroutine("DebugCoroutine");
             hasToJump = false;
         }
 
@@ -79,25 +103,13 @@ public class PlayerControl : MonoBehaviour {
         {
 
             childAnimator.SetFloat("VerticalSpeed", childBody.velocity.y);
-            float newSpeed = 0.1f * axisValue + childBody.velocity.x;
-
-            Debug.Log(childBody.velocity.x + " actual speed at time " + Time.time);
-            Debug.Log(newSpeed + " new speed at time " + Time.time);
+            float newSpeed = jumpAttenuationValue * axisValue + childBody.velocity.x;
             if ((facingRight && newSpeed > speedMultiplier) || ((!facingRight && newSpeed < -speedMultiplier)))
-            {
                 childBody.velocity = new Vector3(Mathf.Sign(childBody.velocity.x) * speedMultiplier, childBody.velocity.y, 0);
-                Debug.Log("HIGHSPEED");
-            }
             else if ((facingRight && newSpeed < 0) || (!facingRight && newSpeed > 0))
-            {
                 childBody.velocity = new Vector3(0, childBody.velocity.y, 0);
-                Debug.Log("LOWSPEED");
-            }
             else
-            {
-                childBody.AddForce(new Vector3(0.1f * axisValue, 0, 0), ForceMode.VelocityChange);
-                Debug.Log("SETSPEED");
-            }
+                childBody.AddForce(new Vector3(jumpAttenuationValue * axisValue, 0, 0), ForceMode.VelocityChange);
         }
         else
         {
@@ -120,7 +132,8 @@ public class PlayerControl : MonoBehaviour {
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawRay(this.transform.position, -Vector3.up * groundCheckRadius);
+        Gizmos.DrawRay(this.transform.position + Vector3.up * 0.5f + Vector3.right * 0.3f, -Vector3.up * groundCheckRadius);
+        Gizmos.DrawRay(this.transform.position + Vector3.up * 0.5f + Vector3.right * (-0.3f), -Vector3.up * groundCheckRadius);
     }
 
     void Flip() {
@@ -133,16 +146,20 @@ public class PlayerControl : MonoBehaviour {
     IEnumerator RaycastCoroutine(float timeGrounded)
     {
         while (true)
-        {
-            if (Physics.Raycast(this.transform.position, -Vector3.up, groundCheckRadius, groundLayer))
-            {
+        { 
+            if (Physics.Raycast(this.transform.position + Vector3.up * 0.5f + Vector3.right * 0.3f, -Vector3.up, groundCheckRadius, groundLayer)
+                || Physics.Raycast(this.transform.position + Vector3.up * 0.5f + Vector3.right * (-0.3f), -Vector3.up, groundCheckRadius, groundLayer)
+                )
                 grounded = true;
-                yield return new WaitForSeconds(timeGrounded);
-            }
             else
                 grounded = false;
 
-            yield return null;
+            yield return new WaitForSeconds(timeGrounded);
         }
+    }
+    IEnumerator DebugCoroutine() {
+        yield return null;
+        Debug.Log("Velocity on y after is " + childBody.velocity.y);
+        Debug.Log("Velocity on x after is " + childBody.velocity.x);
     }
 }
