@@ -24,15 +24,11 @@ public class RespawnDeathObject : MonoBehaviour {
                 spikeBodyQueue.Peek().isKinematic = true;
                 Invoke("Fall", returnTime);
             }
-            else
-                Debug.Log("NO RIGIDBODY");
         }
-        else
-            Debug.Log("NO DEATHOBJECT");
+
     }
 
     void Fall() {
-        Debug.Log("Fall?");
         spikeBodyQueue.Peek().transform.position = this.transform.position;
         spikeBodyQueue.Peek().isKinematic = false;
         spikeBodyQueue.Dequeue();
