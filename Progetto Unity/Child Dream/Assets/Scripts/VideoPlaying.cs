@@ -18,29 +18,25 @@ public class VideoPlaying : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (!hasPlayed && Time.unscaledTime > 5f)
+        if (!hasPlayed)
         {
             Time.timeScale = 0f;
             if (!video.isPlaying)
             {
                 UI.SetActive(false);
                 hasPlayed = true;
-                StartCoroutine("StartTime");
-                
+                Time.timeScale = 1f;
+
             }
             else if (Input.GetButtonDown("Jump"))
             {
                 video.Stop();
                 UI.SetActive(false);
                 hasPlayed = true;
-                StartCoroutine("StartTime");
+                Time.timeScale = 1f;
             }
         }
             
 	}
 
-    IEnumerator StartTime() {
-        yield return new WaitForSecondsRealtime(1f);
-        Time.timeScale = 1f;
-    }
 }
