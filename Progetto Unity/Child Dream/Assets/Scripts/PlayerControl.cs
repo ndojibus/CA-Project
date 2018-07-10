@@ -145,8 +145,6 @@ public class PlayerControl : MonoBehaviour {
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("COLLIDED WITH LAYER " + collision.collider.gameObject.layer);
-        Debug.Log("GROUND LAYER " + groundLayer);
         if (!hasFallen && grounded && groundLayer == (groundLayer | (1 << collision.collider.gameObject.layer)))
         {
             
