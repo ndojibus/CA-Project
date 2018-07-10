@@ -124,7 +124,7 @@ public class GameManagerScript : MonoBehaviour {
         isPaused = !isPaused;
     }
 
-    private void StartInitialVideo()
+    public void StartInitialVideo()
     {
         m_musicController.TransictionToVideo();
         m_blackRenderer.SetActive(true);
