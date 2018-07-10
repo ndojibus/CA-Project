@@ -157,8 +157,9 @@ public class PlayerControl : MonoBehaviour {
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawRay(this.transform.position + Vector3.up * 0.5f + Vector3.right * 0.3f, -Vector3.up * groundCheckRadius);
-        Gizmos.DrawRay(this.transform.position + Vector3.up * 0.5f + Vector3.right * (-0.3f), -Vector3.up * groundCheckRadius);
+        Gizmos.DrawRay(this.transform.position + Vector3.up * 0.5f + Vector3.right * 0.4f, -Vector3.up * groundCheckRadius);
+        Gizmos.DrawRay(this.transform.position + Vector3.up * 0.5f + Vector3.right * (-0.4f), -Vector3.up * groundCheckRadius);
+        Gizmos.DrawRay(this.transform.position + Vector3.up * 0.5f, -Vector3.up * groundCheckRadius);
     }
 
     void Flip() {
@@ -172,8 +173,9 @@ public class PlayerControl : MonoBehaviour {
     {
         while (true)
         {
-            if (Physics.Raycast(this.transform.position + Vector3.up * 0.5f + Vector3.right * 0.3f, -Vector3.up, groundCheckRadius, groundLayer)
-                || Physics.Raycast(this.transform.position + Vector3.up * 0.5f + Vector3.right * (-0.3f), -Vector3.up, groundCheckRadius, groundLayer)
+            if (Physics.Raycast(this.transform.position + Vector3.up * 0.5f + Vector3.right * 0.4f, -Vector3.up, groundCheckRadius, groundLayer)
+                || Physics.Raycast(this.transform.position + Vector3.up * 0.5f + Vector3.right * (-0.4f), -Vector3.up, groundCheckRadius, groundLayer)
+                || Physics.Raycast(this.transform.position + Vector3.up * 0.5f, -Vector3.up, groundCheckRadius, groundLayer)
                 )
                 grounded = true;
             else
