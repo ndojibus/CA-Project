@@ -132,7 +132,7 @@ public class GameManagerScript : MonoBehaviour {
         isPlaying = true;
         Time.timeScale = 0f;
         PausePanel.SetActive(false);
-        m_playerControl.Controllable = true;
+        m_playerControl.Controllable = false;
 
     }
 
@@ -145,7 +145,7 @@ public class GameManagerScript : MonoBehaviour {
         
         Time.timeScale = 0f;
         PausePanel.SetActive(false);
-        m_playerControl.Controllable = true;
+        m_playerControl.Controllable = false;
 
         isEnd = true;
         isPlaying = true;
