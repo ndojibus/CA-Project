@@ -10,6 +10,7 @@ public class GameManagerScript : MonoBehaviour {
     private bool isStart = true;
     private bool isPlaying = false;
     private bool isEnd = false;
+    private bool isPaused = true;
     
 
     public GameObject m_blackRenderer;
@@ -20,14 +21,13 @@ public class GameManagerScript : MonoBehaviour {
 
     public GameObject VideoPlayer;
     public GameObject EndVideoPlayer;
+    public GameObject PausePanel;
+
+    public GameObject Player;
+    private PlayerControl m_playerControl;
 
     private VideoPlayer m_videoPlayerComp;
     private VideoPlayer m_endVideoPlayerComp;
-    
-    
-
-
-
 
     private void Awake()
     {
@@ -63,6 +63,18 @@ public class GameManagerScript : MonoBehaviour {
             }
         }
 
+        if (Player == null)
+        {
+            Debug.Log(this.name + "missing Player");
+        }
+        else
+        {
+            m_playerControl = Player.GetComponent<PlayerControl>();
+            if (m_playerControl == null)
+            {
+                Debug.Log(this.name + "missing Player control");
+            }
+        }
         if (m_blackRenderer == null)
         {
             Debug.Log(this.name + "missing Black Renderer");
@@ -90,6 +102,26 @@ public class GameManagerScript : MonoBehaviour {
             StopVideo();
         }
 
+        if (Input.GetButtonDown("Cancel"))
+        {
+            PauseGame();
+        }
+
+    }
+
+    public void PauseGame()
+    {
+        if (isPaused)
+        {
+            PausePanel.SetActive(false);
+            m_playerControl.Controllable = true;
+        }
+        else
+        {
+            PausePanel.SetActive(true);
+            m_playerControl.Controllable = false;
+        }
+        isPaused = !isPaused;
     }
 
     private void StartInitialVideo()
@@ -99,7 +131,8 @@ public class GameManagerScript : MonoBehaviour {
         VideoPlayer.SetActive(true);
         isPlaying = true;
         Time.timeScale = 0f;
-
+        PausePanel.SetActive(false);
+        m_playerControl.Controllable = true;
 
     }
 
@@ -111,6 +144,8 @@ public class GameManagerScript : MonoBehaviour {
         m_endVideoPlayerComp.Play();
         
         Time.timeScale = 0f;
+        PausePanel.SetActive(false);
+        m_playerControl.Controllable = true;
 
         isEnd = true;
         isPlaying = true;
@@ -133,5 +168,17 @@ public class GameManagerScript : MonoBehaviour {
                 Application.Quit();
 #endif
         }
+
+        PausePanel.SetActive(true);
+        m_playerControl.Controllable = false;
+    }
+
+    public void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+                Application.Quit();
+#endif
     }
 }
