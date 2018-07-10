@@ -11,9 +11,12 @@ public class PlayerControl : MonoBehaviour {
     public float highJumpMultiplier = 2f;       // Potenziamento del salto quando si tiene premuto il tasto
     public float groundCheckRadius = 0.5f;      // Distanza del raycast per controllare se si è a terra
     public float jumpAttenuationValue = 0.1f;   // Attenuazione della velocità laterale mentre si è in volo
+    public AudioClip jumpClip;
+    public AudioClip fallClip;
 
     Animator childAnimator;
     Rigidbody childBody;
+    AudioSource sound;
 
     float axisValue;
     float currentSpeed;
@@ -25,6 +28,8 @@ public class PlayerControl : MonoBehaviour {
 
     bool grounded = false;
     bool hasToJump = false;
+    bool hasFallen = false;
+    
 
     // DEBUG CANCELLARE
 
@@ -37,6 +42,16 @@ public class PlayerControl : MonoBehaviour {
         childBody = GetComponent<Rigidbody>();
         if (childAnimator == null)
             Debug.LogError(this.name + ": Rigidbody don't found!");
+
+        sound = this.GetComponent<AudioSource>();
+        if (sound == null)
+            Debug.Log(this.name + " Audio Source missing component\n");
+
+        if (jumpClip == null)
+            Debug.LogError(this.name + ": jump clip don't found!");
+
+        if (fallClip == null)
+            Debug.LogError(this.name + ": fall clip don't found!");
     }
 
     private void Start()
@@ -86,13 +101,12 @@ public class PlayerControl : MonoBehaviour {
             else
                 newVelocity = speedMultiplier;
 
-            Debug.Log("Velocity on y before is " + childBody.velocity.y);
-            Debug.Log("Velocity on x before is " + childBody.velocity.x);
             childBody.AddForce(new Vector3(0, jumpPower, 0), ForceMode.Impulse);
             childBody.velocity -=  Vector3.right * (childBody.velocity.x - Mathf.Sign(childBody.velocity.x) * newVelocity);
-            Debug.Log("new velocity is "+ newVelocity + " and x offset is" + (childBody.velocity.x - Mathf.Sign(childBody.velocity.x) * newVelocity));
-            StartCoroutine("DebugCoroutine");
             hasToJump = false;
+
+            sound.pitch = Random.Range(1.5f, 1.6f);
+            sound.PlayOneShot(jumpClip);
         }
 
         childAnimator.SetBool("Grounded", grounded);
@@ -129,6 +143,19 @@ public class PlayerControl : MonoBehaviour {
 
 	}
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        Debug.Log("COLLIDED WITH LAYER " + collision.collider.gameObject.layer);
+        Debug.Log("GROUND LAYER " + groundLayer);
+        if (!hasFallen && grounded && groundLayer == (groundLayer | (1 << collision.collider.gameObject.layer)))
+        {
+            
+            sound.pitch = Random.Range(1.0f, 1.4f);
+            sound.PlayOneShot(fallClip);
+            hasFallen = true;
+        }
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
@@ -146,13 +173,16 @@ public class PlayerControl : MonoBehaviour {
     IEnumerator RaycastCoroutine(float timeGrounded)
     {
         while (true)
-        { 
+        {
             if (Physics.Raycast(this.transform.position + Vector3.up * 0.5f + Vector3.right * 0.3f, -Vector3.up, groundCheckRadius, groundLayer)
                 || Physics.Raycast(this.transform.position + Vector3.up * 0.5f + Vector3.right * (-0.3f), -Vector3.up, groundCheckRadius, groundLayer)
                 )
                 grounded = true;
             else
+            {
                 grounded = false;
+                hasFallen = false;
+            }
 
             yield return new WaitForSeconds(timeGrounded);
         }

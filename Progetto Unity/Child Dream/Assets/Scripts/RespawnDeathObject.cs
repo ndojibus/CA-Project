@@ -7,9 +7,15 @@ public class RespawnDeathObject : MonoBehaviour {
 
     Queue<Rigidbody> spikeBodyQueue ;
 
+    AudioSource dropSound;
+
     private void Awake()
     {
         spikeBodyQueue = new Queue<Rigidbody>();
+
+        dropSound = this.GetComponent<AudioSource>();
+        if (dropSound == null)
+            Debug.Log(this.name + "Death Audio Source missing component\n");
     }
 
     private void OnTriggerEnter(Collider other)
@@ -29,6 +35,8 @@ public class RespawnDeathObject : MonoBehaviour {
     }
 
     void Fall() {
+
+        dropSound.PlayOneShot(dropSound.clip);
         spikeBodyQueue.Peek().transform.position = this.transform.position;
         spikeBodyQueue.Peek().isKinematic = false;
         spikeBodyQueue.Dequeue();
