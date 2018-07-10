@@ -3,17 +3,26 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
 public class VideoPlaying : MonoBehaviour {
-    VideoPlayer video;
-    GameObject UI;
 
-    bool hasPlayed = false;
+    VideoPlayer video;
+
+    public GameObject m_videoPlayer;
+    public GameObject m_blackBlackground;
+
+    public bool hasPlayed = false;
+
+    //fare controllo
 	// Use this for initialization
 	void Awake () {
-        video = GetComponentInChildren<VideoPlayer>();
+        video = m_videoPlayer.GetComponent<VideoPlayer>();
         if (video == null)
             Debug.Log(this.name + " no video found!");
 
-        UI = this.transform.GetChild(1).gameObject;
+        
+        if (m_blackBlackground== null)
+        {
+            Debug.Log(this.name + "missing Black Background");
+        }
     }
 	
 	// Update is called once per frame
@@ -23,7 +32,7 @@ public class VideoPlaying : MonoBehaviour {
             Time.timeScale = 0f;
             if (!video.isPlaying)
             {
-                UI.SetActive(false);
+                m_blackBlackground.SetActive(false);
                 hasPlayed = true;
                 Time.timeScale = 1f;
 
@@ -31,7 +40,7 @@ public class VideoPlaying : MonoBehaviour {
             else if (Input.GetButtonDown("Jump"))
             {
                 video.Stop();
-                UI.SetActive(false);
+                m_blackBlackground.SetActive(false);
                 hasPlayed = true;
                 Time.timeScale = 1f;
             }
