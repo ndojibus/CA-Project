@@ -3,14 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
+using UnityEngine.SceneManagement;
 
 public class GameManagerScript : MonoBehaviour {
 
 
     private bool isStart = true;
     private bool isPlaying = false;
-    private bool isEnd = false;
+    
     private bool isPaused = true;
+    private bool quitGame = false;
     
 
     public GameObject m_blackRenderer;
@@ -129,6 +131,7 @@ public class GameManagerScript : MonoBehaviour {
         m_musicController.TransictionToVideo();
         m_blackRenderer.SetActive(true);
         VideoPlayer.SetActive(true);
+        //m_videoPlayerComp.Play();
         isPlaying = true;
         Time.timeScale = 0f;
         PausePanel.SetActive(false);
@@ -136,23 +139,26 @@ public class GameManagerScript : MonoBehaviour {
 
     }
 
-    public void StartEndVideo()
+    public void StartEndVideo(bool quitGame= false)
     {
+        this.quitGame = quitGame;
+        Time.timeScale = 0f;
         m_musicController.TransictionToVideo();
         m_blackRenderer.SetActive(true);
         EndVideoPlayer.SetActive(true);
         m_endVideoPlayerComp.Play();
         
-        Time.timeScale = 0f;
+        
         PausePanel.SetActive(false);
         m_playerControl.Controllable = false;
 
-        isEnd = true;
+        
         isPlaying = true;
     }
 
     private void StopVideo()     
     {
+        m_videoPlayerComp.Stop();
         EndVideoPlayer.SetActive(false);
         VideoPlayer.SetActive(false);
         m_blackRenderer.SetActive(false);
@@ -160,17 +166,19 @@ public class GameManagerScript : MonoBehaviour {
         Time.timeScale = 1f;
         m_musicController.TransictionToGame();
 
-        if (isEnd)
-        {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-                Application.Quit();
-#endif
-        }
-
+   
         PausePanel.SetActive(true);
         m_playerControl.Controllable = false;
+
+        //Se è il video finale
+        if (quitGame)
+        {
+           
+            QuitGame();
+        }
+        
+
+        
     }
 
     public void QuitGame()

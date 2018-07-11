@@ -28,7 +28,7 @@ public class TriggerEndVideo : MonoBehaviour {
         DeathManager death = other.gameObject.GetComponent<DeathManager>();
         if (death != null)
         {
-            m_managerScript.StartEndVideo();
+            m_managerScript.StartEndVideo(true);
         }
 
     }
