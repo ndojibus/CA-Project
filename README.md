@@ -2,8 +2,8 @@ Animation and Videogame project for Computer Animation's course in Politecnico d
 
 Made by:
 
-Claudio Gianfrate
-Antonio Scaldaferri 
+Claudio Gianfrate,
+Antonio Scaldaferri, 
 Yoann Montreuil 
 
 If you want to try out, here is a release version
